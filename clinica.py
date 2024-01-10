@@ -1,12 +1,14 @@
 import sqlite3
 from datetime import datetime
 
+# Classe Paciente com os atributos paciente_id, nome e telefone
 class Paciente:
     def __init__(self, paciente_id, nome, telefone):
         self.paciente_id = paciente_id
         self.nome = nome
         self.telefone = telefone
 
+# Classe Consulta com os atributos consulta_id, paciente_id, dia, hora e especialidade
 class Consulta:
     def __init__(self, consulta_id, paciente_id, dia, hora, especialidade):
         self.consulta_id = consulta_id
@@ -15,6 +17,7 @@ class Consulta:
         self.hora = hora
         self.especialidade = especialidade
 
+# Classe SistemaClinica com seus atributos e fazendo a conexão com o banco de dados
 class SistemaClinica:
     def __init__(self, db_path="clinica.db"):
         self.db_path = db_path
@@ -23,6 +26,7 @@ class SistemaClinica:
         self.pacientes_cadastrados = self.carregar_pacientes()
         self.agendamentos = self.carregar_agendamentos()
 
+    # Criação das tabelas no banco de dados
     def criar_tabelas(self):
         with self.conn:
             self.conn.execute('''
@@ -42,7 +46,7 @@ class SistemaClinica:
                     FOREIGN KEY (paciente_id) REFERENCES pacientes (id)
                 )
             ''')
-
+    # Cadastro dos pacientes
     def cadastrar_paciente(self, nome, telefone):
         with self.conn:
             try:
@@ -92,7 +96,7 @@ class SistemaClinica:
             hora = input("Digite o HORÁRIO da consulta (formato HH:MM): ")
             print()
 
-            # Verifica se já existe uma consulta marcada para o mesmo dia e hora
+            # Verifica se já existe uma consulta marcada para o mesmo dia e horário
             for consulta in self.agendamentos:
                 if consulta.dia == f"{dia}-{mes}-{ano}" and consulta.hora == hora:
                     print()
@@ -100,7 +104,7 @@ class SistemaClinica:
                     print()
                     return
 
-            # Verifica se a data da consulta é no futuro
+            # Verifica se a data da consulta é uma data futura
             data_consulta = datetime.strptime(f"{dia}-{mes}-{ano} {hora}", "%d-%m-%Y %H:%M")
             data_atual = datetime.now()
             if data_consulta <= data_atual:
@@ -125,11 +129,13 @@ class SistemaClinica:
             print("Escolha inválida. Tente novamente.")
             print()
 
+    # Carrega os agendamentos do banco de dados
     def carregar_agendamentos(self):
         with self.conn:
             cursor = self.conn.execute("SELECT id, paciente_id, dia, hora, especialidade FROM consultas")
             return [Consulta(*row) for row in cursor.fetchall()]
 
+    # Lista os agendamentos
     def listar_agendamentos(self):
         print("Lista de Agendamentos:")
         print()
@@ -143,6 +149,7 @@ class SistemaClinica:
                 print()
                 print(f"{i}. Paciente não encontrado - Dia: {consulta.dia}, Hora: {consulta.hora}, Especialidade: {consulta.especialidade}")
 
+    # Função para cancelar a consulta
     def cancelar_consulta(self):
         if not self.agendamentos:
             print()
@@ -183,12 +190,15 @@ class SistemaClinica:
             print("Escolha inválida. Tente novamente.")
             print()
 
+    # Função para fechar a conexão com o banco de dados
     def fechar_conexao(self):
         self.conn.close()
 
+# Função principal que inicia o sistema como um todo
 if __name__ == "__main__":
     sistema = SistemaClinica()
 
+    # Loop para o menu
     while True:
         print("\nMenu:")
         print()
