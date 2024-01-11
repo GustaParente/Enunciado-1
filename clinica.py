@@ -1,6 +1,8 @@
+# Importação das bibliotecas necessárias
 import sqlite3
 from datetime import datetime
 
+# Definição das 3 classes que usaremos no sistema
 class Paciente:
     def __init__(self, paciente_id, nome, telefone):
         self.paciente_id = paciente_id
@@ -22,10 +24,11 @@ class SistemaClinica:
         self.criar_tabelas()
         self.carregar_dados()
 
+    # Método para criar as tabelas no banco de dados
     def criar_tabelas(self):
         with self.conn:
             self.conn.execute('''
-                CREATE TABLE IF NOT EXISTS pacientes (
+                CREATE TABLE IF NOT EXISTS paciente (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nome TEXT NOT NULL,
                     telefone TEXT NOT NULL UNIQUE
@@ -38,14 +41,15 @@ class SistemaClinica:
                     dia TEXT NOT NULL,
                     hora TEXT NOT NULL,
                     especialidade TEXT NOT NULL,
-                    FOREIGN KEY (paciente_id) REFERENCES pacientes (id)
+                    FOREIGN KEY (paciente_id) REFERENCES paciente (id)
                 )
             ''')
 
+    # Método para cadastrar um novo paciente
     def cadastrar_paciente(self, nome, telefone):
         with self.conn:
             try:
-                self.conn.execute("INSERT INTO pacientes (nome, telefone) VALUES (?, ?)", (nome, telefone))
+                self.conn.execute("INSERT INTO paciente (nome, telefone) VALUES (?, ?)", (nome, telefone))
                 paciente_id = self.conn.execute("SELECT last_insert_rowid()").fetchone()[0]
                 paciente = Paciente(paciente_id, nome, telefone)
                 self.pacientes_cadastrados.append(paciente)
@@ -53,20 +57,24 @@ class SistemaClinica:
             except sqlite3.IntegrityError:
                 print("ERRO! Telefone já cadastrado no sistema.")
 
+    # Método para carregar os dados do banco de dados
     def carregar_dados(self):
         self.pacientes_cadastrados = self.carregar_pacientes()
         self.agendamentos = self.carregar_agendamentos()
 
+    # Método para carregar os pacientes cadastrados no banco de dados
     def carregar_pacientes(self):
         with self.conn:
-            cursor = self.conn.execute("SELECT id, nome, telefone FROM pacientes")
+            cursor = self.conn.execute("SELECT id, nome, telefone FROM paciente")
             return [Paciente(*row) for row in cursor.fetchall()]
 
+    # Método para listar os pacientes cadastrados
     def listar_pacientes(self):
         print("\nLista de Pacientes:")
         for i, paciente in enumerate(self.pacientes_cadastrados, 1):
             print(f"{i}. {paciente.nome} - Telefone: {paciente.telefone}")
 
+    # Método para marcar uma consulta
     def marcar_consulta(self):
         if not self.pacientes_cadastrados:
             print("\nNão há pacientes cadastrados...")
@@ -105,11 +113,13 @@ class SistemaClinica:
         except (ValueError, IndexError):
             print("\nEscolha inválida. Tente novamente.")
 
+    # Método para carregar os agendamentos do banco de dados
     def carregar_agendamentos(self):
         with self.conn:
             cursor = self.conn.execute("SELECT id, paciente_id, dia, hora, especialidade FROM consultas")
             return [Consulta(*row) for row in cursor.fetchall()]
 
+    # Método para listar os agendamentos
     def listar_agendamentos(self):
         print("\nLista de Agendamentos:")
         for i, consulta in enumerate(self.agendamentos, 1):
@@ -119,6 +129,7 @@ class SistemaClinica:
             else:
                 print(f"{i}. Paciente não encontrado - Dia: {consulta.dia}, Hora: {consulta.hora}, Especialidade: {consulta.especialidade}")
 
+    # Método para cancelar uma consulta
     def cancelar_consulta(self):
         if not self.agendamentos:
             print("\nNão há consultas agendadas.")
@@ -146,12 +157,15 @@ class SistemaClinica:
         except (ValueError, IndexError):
             print("\nEscolha inválida. Tente novamente.")
 
+    # Método para fechar a conexão com o banco de dados
     def fechar_conexao(self):
         self.conn.close()
 
+# Execução do programa
 if __name__ == "__main__":
     sistema = SistemaClinica()
 
+    # Loop para o menu
     while True:
         print("\nMenu:")
         print("1. Cadastrar Paciente")
